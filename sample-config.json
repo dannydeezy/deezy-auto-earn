@@ -1,0 +1,18 @@
+{
+    "PERIOD_SECONDS": 30,
+    "DESTINATIONS": [
+        {
+            "TYPE": "LNURL",
+            "LNURL_OR_ADDRESS": "me@walletofsatoshi.com",
+            "MAX_ROUTE_FEE_PPM": 500,
+            "PAYMENT_AMOUNT_SATS": 50000
+        },
+        {
+            "TYPE": "BITFINEX",
+            "BFX_API_KEY": "API_KEY_123",
+            "BFX_API_SECRET": "API_SECRET_123",
+            "MAX_ROUTE_FEE_PPM": 600,
+            "PAYMENT_AMOUNT_SATS": 200000
+        }
+    ]
+}
