@@ -1,29 +1,13 @@
 const { getChannels, pay, signMessage, getChainBalance, getPendingChannels, openChannel, getNode, addPeer, getPeers } = require('ln-service')
-const { requestInvoice } = require('lnurl-pay')
+const lnurlClient = require('./clients/lnurl')
+const bitfinexClient = require('./clients/bitfinex')
+
 const axios = require('axios')
 const config = require('./config.json')
 const { lnd } = require('./lnd')
 const PATHFINDING_TIMEOUT_MS = config.PATHFINDING_TIMEOUT_MS || 60 * 1000 // 1 minute
 const DEEZY_PUBKEY = '024bfaf0cabe7f874fd33ebf7c6f4e5385971fc504ef3f492432e9e3ec77e1b5cf'
 const CHAIN_BALANCE_BUFFER = 50000
-
-async function fetchLnurlInvoice({ lnUrlOrAddress, paymentAmountSats }) {
-    console.log(`Fetching invoice from ${lnUrlOrAddress} for ${paymentAmountSats} sats`)
-    const { invoice } =
-        await requestInvoice({
-            lnUrlOrAddress,
-            tokens: paymentAmountSats // satoshis
-        }).catch(err => {
-            console.error(err)
-            return { invoice: null }
-        })
-    return invoice
-}
-
-async function fetchBfxInvoice() {
-    console.error('BFX not implemented yet')
-    return null
-}
 
 async function tryPayInvoice({ invoice, paymentAmountSats, maxRouteFeePpm, outChannelIds }) {
     const maxRouteFeeSats = Math.floor(maxRouteFeePpm * paymentAmountSats / 1000000)
@@ -61,13 +45,17 @@ async function run({ destination, outChannelIds }) {
     let invoice
     switch (destination.type) {
         case 'LNURL':
-            invoice = await fetchLnurlInvoice({
+            invoice = await lnurlClient.fetchInvoice({
                 lnUrlOrAddress: destination.LNURL_OR_ADDRESS,
                 paymentAmountSats: destination.PAYMENT_AMOUNT_SATS
             })
             break;
         case 'BITFINEX':
-            invoice = await fetchBfxInvoice({ destination })
+            invoice = await bitfinexClient.fetchInvoice({ 
+                paymentAmountSats: destination.PAYMENT_AMOUNT_SATS,
+                apiSecret: destination.API_SECRET,
+                apiKey: destination.API_KEY 
+            })
             break;
         default:
             console.error(`Unknown type ${destination.type}`)
