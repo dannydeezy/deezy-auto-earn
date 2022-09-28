@@ -41,18 +41,19 @@ async function tryPayInvoice({ invoice, paymentAmountSats, maxRouteFeePpm, outCh
     console.log(`Payment confirmed, with fee ${paymentResult.safe_fee} satoshis, and ppm ${feePpm}`)
 }
 
-async function run({ destination, outChannelIds }) {
+async function attemptPaymentToDestination({ destination, outChannelIds }) {
     let invoice
-    switch (destination.type) {
+    const paymentAmountSats = destination.PAYMENT_AMOUNT_SATS
+    switch (destination.TYPE) {
         case 'LNURL':
             invoice = await lnurlClient.fetchInvoice({
                 lnUrlOrAddress: destination.LNURL_OR_ADDRESS,
-                paymentAmountSats: destination.PAYMENT_AMOUNT_SATS
+                paymentAmountSats
             })
             break;
         case 'BITFINEX':
             invoice = await bitfinexClient.fetchInvoice({ 
-                paymentAmountSats: destination.PAYMENT_AMOUNT_SATS,
+                paymentAmountSats,
                 apiSecret: destination.API_SECRET,
                 apiKey: destination.API_KEY 
             })
@@ -175,7 +176,7 @@ async function run() {
     }
 
     for (const destination of config.DESTINATIONS) {
-        await run({ destination, outChannelIds }).catch(err => {
+        await attemptPaymentToDestination({ destination, outChannelIds }).catch(err => {
             console.error(err)
         })
     }
