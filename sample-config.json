@@ -2,9 +2,9 @@
     "CLOSE_WHEN_CHANNEL_EXCEEDS_RATIO": 0.95,
     "DEEZY_CHANNEL_SIZE_SATS": 100000000,
     "OPEN_CHANNEL_WHEN_LOCAL_SATS_BELOW": 100000,
-    "TLS_CERT_PATH": "./tls.cert",
-    "MACAROON_PATH": "./admin.macaroon",
-    "SOCKET": "deezy-personal.m.voltageapp.io:10009",
+    "TLS_CERT_PATH": "path/to/if/not/default/tls.cert",
+    "MACAROON_PATH": "path/to/if/not/default/admin.macaroon",
+    "SOCKET": "your-lnd-socket-if-not-default:10009",
     "DESTINATIONS": [
         {
             "TYPE": "LNURL",
