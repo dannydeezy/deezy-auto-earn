@@ -6,6 +6,7 @@ automatically open channels to deezy, push sats through, and earn
 git clone git@github.com:dannydeezy/deezy-auto-earn.git
 cd deezy-auto-earn
 cp sample-config.json config.json
+# edit config.json with your custom values
 npm i
 ```
 
