@@ -142,6 +142,19 @@ async function ensureConnectedToDeezy() {
     })
 }
 
+async function maybeAutoWithdraw({ destination }) {
+    if (destination.type !== 'BITFINEX') {
+        console.log(`AUTO_WITHDRAW is currently only enabled for BITFINEX destinations`)
+        return
+    }
+    await bitfinexClient.maybeAutoWithdraw({ 
+        apiKey, 
+        apiSecret, 
+        address: destination.ON_CHAIN_WITHDRAWAL_ADDRESS,
+        minWithdrawalSats: destination.ON_CHAIN_WITHDRAWAL_TARGET_SIZE_SATS
+    })
+}
+
 async function run() {
     await ensureConnectedToDeezy()
     console.log(`Fetching channel info`)
@@ -179,6 +192,11 @@ async function run() {
         await attemptPaymentToDestination({ destination, outChannelIds }).catch(err => {
             console.error(err)
         })
+        if (destination.AUTO_WITHDRAW) {
+            await maybeAutoWithdraw({ destination }).catch(err => {
+                console.error(err)
+            })
+        }
     }
 }
 

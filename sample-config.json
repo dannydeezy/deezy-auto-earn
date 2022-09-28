@@ -17,7 +17,9 @@
             "API_KEY": "API_KEY_123",
             "API_SECRET": "API_SECRET_123",
             "MAX_ROUTE_FEE_PPM": 600,
-            "PAYMENT_AMOUNT_SATS": 200000
+            "PAYMENT_AMOUNT_SATS": 200000,
+            "ON_CHAIN_WITHDRAWAL_TARGET_SIZE_SATS": 200000000,
+            "ON_CHAIN_WITHDRAWAL_ADDRESS": "on-chain-addr-on-your-lightning-node-that-is-on-your-bfx-allow-list"
         }
     ]
 }
