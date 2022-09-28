@@ -15,7 +15,7 @@ node index.js
 ```
 
 ## run continously (recommended)
-it is recommended to run this as a systemd service, which can be done like so
+it is recommended to run this as a systemd service.
 note: you may need to edit the `deezy-auto-earn-example.service` file and change the username from ubuntu to your preferred user.
 ```
 sudo cp deezy-auto-earn-example.service /etc/systemd/system/deezy-auto-earn.service
