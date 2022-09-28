@@ -25,9 +25,21 @@ note you may want to make the following edits to the `deezy-auto-earn-example.se
 ```
 sudo cp deezy-auto-earn-example.service /etc/systemd/system/deezy-auto-earn.service
 sudo systemctl enable deezy-auto-earn.service
-sudo systemctl start
+sudo systemctl start deezy-auto-earn
 ```
+note, doing `enable` means it will always start up when your machine restarts
+
 to follow the logs:
 ```
 journalctl -fu deezy-auto-earn -n 100
+```
+
+to stop the service:
+```
+sudo systemctl stop deezy-auto-earn
+```
+
+to restart the service:
+```
+sudo systemctl restart deezy-auto-earn
 ```
