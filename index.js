@@ -1,9 +1,11 @@
-const { getChannels, pay } = require('ln-service')
+const { getChannels, pay, signMessage, getChainBalance, getPendingChannels, openChannel, getNode, addPeer, getPeers } = require('ln-service')
 const { requestInvoice } = require('lnurl-pay')
+const axios = require('axios')
 const config = require('./config.json')
 const { lnd } = require('./lnd')
 const PATHFINDING_TIMEOUT_MS = config.PATHFINDING_TIMEOUT_MS || 60 * 1000 // 1 minute
 const DEEZY_PUBKEY = '024bfaf0cabe7f874fd33ebf7c6f4e5385971fc504ef3f492432e9e3ec77e1b5cf'
+const CHAIN_BALANCE_BUFFER = 50000
 
 async function fetchLnurlInvoice({ lnUrlOrAddress, paymentAmountSats }) {
     console.log(`Fetching invoice from ${lnUrlOrAddress} for ${paymentAmountSats} sats`)
@@ -86,12 +88,104 @@ async function run({ destination, outChannelIds }) {
     })
 }
 
+function isReadyToEarnAndClose({ channel }) {
+    return channel.local_balance * 1.0 / channel.capacity < (1 - config.CLOSE_WHEN_CHANNEL_EXCEEDS_RATIO)
+}
+
+async function earnAndClose({ channel }) {
+    const channelPoint = `${channel.transaction_id}:${channel.vout}`
+    console.log(`Requesting earn and close for deezy channel: ${channelPoint}`)
+    const message = `close ${channelPoint}`
+    const { signature } = await signMessage({ lnd, message })
+    const body = {
+        channel_point: channelPoint,
+        signature
+    }
+    const response = await axios.post(`https://api.deezy.io/v1/earn/closechannel`, body)
+    console.log(response.data)
+}
+
+async function maybeOpenChannel({ localInitiatedDeezyChannels }) {
+    const currentLocalSats = localInitiatedDeezyChannels.reduce((acc, it) => acc + it.local_balance, 0)
+    const { pending_channels } = await getPendingChannels({ lnd })
+    const pendingOpenLocalSats = pending_channels.reduce((acc, it) => acc + it.local_balance, 0)
+
+    const totalLocalSats = currentLocalSats + pendingOpenLocalSats
+    console.log(`Total local open or pending sats: ${totalLocalSats}`)
+    if (totalLocalSats > (config.OPEN_CHANNEL_WHEN_LOCAL_SATS_BELOW || 0)) {
+        console.log(`Not opening channel, total local sats ${totalLocalSats} is above threshold ${config.OPEN_CHANNEL_WHEN_LOCAL_SATS_BELOW}`)
+        return
+    }
+
+    const chainBalance = (await getChainBalance({ lnd })).chain_balance
+    console.log(`Chain balance is ${chainBalance}`)
+
+    if (chainBalance < config.DEEZY_CHANNEL_SIZE_SATS + CHAIN_BALANCE_BUFFER) {
+        console.log(`Not opening channel, chain balance ${chainBalance} is below threshold ${config.DEEZY_CHANNEL_SIZE_SATS} plus buffer ${CHAIN_BALANCE_BUFFER}`)
+        return
+    }
+
+    console.log(`Opening channel with ${DEEZY_PUBKEY} for ${config.DEEZY_CHANNEL_SIZE_SATS} sats`)
+    const { transaction_id, transaction_vout } = await openChannel({
+        lnd,
+        local_tokens: config.DEEZY_CHANNEL_SIZE_SATS,
+        partner_public_key: DEEZY_PUBKEY
+    }).catch(err => {
+        console.error(err)
+        return {}
+    })
+    if (!transaction_id || !transaction_vout) return false
+    console.log(`Initiated channel with deezy, txid ${transaction_id}, vout ${transaction_vout}`)
+    return true
+}
+
+async function ensureConnectedToDeezy() {
+    const { peers } = await getPeers({ lnd })
+    const deezyPeer = peers.find(it => it.public_key === DEEZY_PUBKEY)
+    if (deezyPeer) {
+        console.log(`Already connected to deezy`)
+        return
+    }
+    console.log(`Connecting to deezy`)
+    const deezyNodeInfo = await getNode({ lnd, is_omitting_channels: true, public_key: DEEZY_PUBKEY })
+    await addPeer({ lnd, public_key: DEEZY_PUBKEY, socket: deezyNodeInfo.sockets[0].socket }).catch(err => {
+        console.error(err)
+    })
+}
+
 async function run() {
-    const { channels } = await getChannels({ 
+    await ensureConnectedToDeezy()
+    console.log(`Fetching channel info`)
+    const { channels } = await getChannels({
         lnd,
         partner_public_key: DEEZY_PUBKEY
+    }).catch(err => {
+        console.error(err)
+        return {}
     })
-    const outChannelIds = channels.filter(it => !it.is_partner_initiated).map(it => it.id)
+    if (!channels) return
+    const localInitiatedDeezyChannels = channels.filter(it => !it.is_partner_initiated)
+    console.log(`Found ${localInitiatedDeezyChannels.length} locally initiated channel(s) with deezy`)
+
+    console.log(`Checking if any deezy channels are ready to close`)
+    for (const channel of localInitiatedDeezyChannels) {
+        if (isReadyToEarnAndClose({ channel })) {
+            await earnAndClose({ channel })
+            // Terminate here if we are closing a channel.
+            console.log(`Attempted to earn and close channel, terminating here.`)
+            return
+        }
+    }
+
+    console.log(`Checking if we should open a channel to deezy`)
+    await maybeOpenChannel({ localInitiatedDeezyChannels })
+
+    const outChannelIds = localInitiatedDeezyChannels.map(it => it.id)
+    if (outChannelIds.length === 0) {
+        console.log(`No locally initiated channels to deezy currently open, terminating here`)
+        return
+    }
+
     for (const destination of config.DESTINATIONS) {
         await run({ destination, outChannelIds }).catch(err => {
             console.error(err)

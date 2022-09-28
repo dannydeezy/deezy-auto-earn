@@ -1,9 +1,14 @@
 {
-    "PERIOD_SECONDS": 30,
+    "CLOSE_WHEN_CHANNEL_EXCEEDS_RATIO": 0.95,
+    "DEEZY_CHANNEL_SIZE_SATS": 100000000,
+    "OPEN_CHANNEL_WHEN_LOCAL_SATS_BELOW": 100000,
+    "TLS_CERT_PATH": "./tls.cert",
+    "MACAROON_PATH": "./admin.macaroon",
+    "SOCKET": "deezy-personal.m.voltageapp.io:10009",
     "DESTINATIONS": [
         {
             "TYPE": "LNURL",
-            "LNURL_OR_ADDRESS": "me@walletofsatoshi.com",
+            "LNURL_OR_ADDRESS": "timelyhail89@walletofsatoshi.com",
             "MAX_ROUTE_FEE_PPM": 500,
             "PAYMENT_AMOUNT_SATS": 50000
         },

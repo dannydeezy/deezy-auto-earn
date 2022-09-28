@@ -1,0 +1,16 @@
+[Unit]
+Description=Deezy Auto Earn
+[Service]
+User=ubuntu
+
+WorkingDirectory=/home/ubuntu/deezy-auto-earn
+
+ExecStart=/usr/bin/node /home/ubuntu/deezy-auto-earn/index.js
+
+SuccessExitStatus=143
+TimeoutStopSec=10
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

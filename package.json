@@ -1,5 +1,5 @@
 {
-  "name": "deezy-earn",
+  "name": "deezy-auto-earn",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.27.2",
     "ln-service": "^54.1.1",
     "lnurl-pay": "^1.0.1"
   }
