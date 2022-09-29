@@ -82,15 +82,22 @@ function isReadyToEarnAndClose({ channel }) {
 }
 
 async function earnAndClose({ channel }) {
-    const channelPoint = `${channel.transaction_id}:${channel.vout}`
+    const channelPoint = `${channel.transaction_id}:${channel.transaction_vout}`
     console.log(`Requesting earn and close for deezy channel: ${channelPoint}`)
     const message = `close ${channelPoint}`
-    const { signature } = await signMessage({ lnd, message })
+    const { signature } = await signMessage({ lnd, message }).catch(err => {
+        console.error(err)
+        return {}
+    })
+    if (!signature) return
     const body = {
         channel_point: channelPoint,
         signature
     }
-    const response = await axios.post(`https://api.deezy.io/v1/earn/closechannel`, body)
+    const response = await axios.post(`https://api.deezy.io/v1/earn/closechannel`, body).catch(err => {
+        console.error(err)
+        return {}
+    })
     console.log(response.data)
 }
 

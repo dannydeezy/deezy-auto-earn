@@ -9,7 +9,7 @@
         {
             "TYPE": "LNURL",
             "LNURL_OR_ADDRESS": "timelyhail89@walletofsatoshi.com",
-            "MAX_ROUTE_FEE_PPM": 500,
+            "MAX_ROUTE_FEE_PPM": 700,
             "PAYMENT_AMOUNT_SATS": 50000
         },
         {
