@@ -2,6 +2,8 @@
     "CLOSE_WHEN_CHANNEL_EXCEEDS_RATIO": 0.95,
     "DEEZY_CHANNEL_SIZE_SATS": 100000000,
     "OPEN_CHANNEL_WHEN_LOCAL_SATS_BELOW": 100000,
+    "PRIVATE_CHANNEL": false,
+    "MAX_CHANNEL_OPEN_FEE_SATS_PER_VBYTE": 1,
     "TLS_CERT_PATH": "path/to/if/not/default/tls.cert",
     "MACAROON_PATH": "path/to/if/not/default/admin.macaroon",
     "SOCKET": "your-lnd-socket-if-not-default:10009",

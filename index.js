@@ -122,10 +122,19 @@ async function maybeOpenChannel({ localInitiatedDeezyChannels }) {
     }
 
     console.log(`Opening channel with ${DEEZY_PUBKEY} for ${config.DEEZY_CHANNEL_SIZE_SATS} sats`)
+    const { tokens_per_vbyte } = await getChainFeeRate({ lnd }).catch(err => {
+        console.error(err)
+        return {}
+    })
+    if (!tokens_per_vbyte) return
+
+    const channelOpenFeeRate = config.MAX_CHANNEL_OPEN_FEE_SATS_PER_VBYTE ? Math.min(tokens_per_vbyte, config.MAX_CHANNEL_OPEN_FEE_SATS_PER_VBYTE) : tokens_per_vbyte
     const { transaction_id, transaction_vout } = await openChannel({
         lnd,
         local_tokens: config.DEEZY_CHANNEL_SIZE_SATS,
-        partner_public_key: DEEZY_PUBKEY
+        partner_public_key: DEEZY_PUBKEY,
+        chain_fee_tokens_per_vbyte: channelOpenFeeRate,
+        is_private: config.PRIVATE_CHANNEL,
     }).catch(err => {
         console.error(err)
         return {}
