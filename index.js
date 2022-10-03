@@ -1,4 +1,4 @@
-const { getChannels, pay, signMessage, getChainBalance, getPendingChannels, openChannel, getNode, addPeer, getPeers } = require('ln-service')
+const { getChannels, pay, signMessage, getChainBalance, getPendingChannels, openChannel, getNode, addPeer, getPeers, getChainFeeRate } = require('ln-service')
 const lnurlClient = require('./clients/lnurl')
 const bitfinexClient = require('./clients/bitfinex')
 
