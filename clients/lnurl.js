@@ -16,7 +16,7 @@ async function torGet({ url, params }) {
 }
 
 async function fetchInvoice({ lnUrlOrAddress, paymentAmountSats }) {
-    const url = decodeUrlOrAddress(source.lnurl_or_lnaddress)
+    const url = decodeUrlOrAddress(lnUrlOrAddress)
     console.log(url)
     const isOnion = isOnionUrl(url)
     console.log(`Fetching invoice from ${lnUrlOrAddress} for ${paymentAmountSats} sats`)
