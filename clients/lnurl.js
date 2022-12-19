@@ -5,7 +5,7 @@ const tor_axios = require('tor-axios');
 const config = require('../config.json')
 
 const tor = tor_axios.torSetup({
-    ip: 'localhost',
+    ip: config.TOR_HOST,
     port: config.TOR_PORT || 9050,
 })
 
