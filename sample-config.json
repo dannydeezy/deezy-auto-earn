@@ -7,6 +7,8 @@
     "TLS_CERT_PATH": "path/to/if/not/default/tls.cert",
     "MACAROON_PATH": "path/to/if/not/default/admin.macaroon",
     "SOCKET": "your-lnd-socket-if-not-default:10009",
+    "TOR_PORT": 9050,
+    "TOR_HOST": "localhost",
     "DESTINATIONS": [
         {
             "TYPE": "LNURL",
