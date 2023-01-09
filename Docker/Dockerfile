@@ -1,20 +1,13 @@
-FROM alpine:3.17 AS build-env
-
-RUN apk add --update --no-cache git
-
-RUN git clone --depth 1 https://github.com/dannydeezy/deezy-auto-earn /deezy-auto-earn
-
 FROM node:current-alpine
 
-COPY --from=build-env /deezy-auto-earn/ /deezy-auto-earn/
-COPY entrypoint.sh entrypoint.sh
+COPY ../ /
 
-RUN cd /deezy-auto-earn \
-    && npm i \
+RUN npm i \
+    && mv Docker/entrypoint.sh / \
     && chmod +x /entrypoint.sh
 
 VOLUME [ "/lnd", "/config" ]
 
-WORKDIR /deezy-auto-earn
+WORKDIR /
 
 ENTRYPOINT [ "/entrypoint.sh" ]
