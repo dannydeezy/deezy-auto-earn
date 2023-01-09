@@ -1,1 +1,7 @@
 docker-deezy-auto-earn.code-workspace
+Dockerfile
+../.git
+../.gitignore
+../sample-config.json
+../README.md
+../deezy-auto-earn-example.service
