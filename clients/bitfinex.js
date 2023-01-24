@@ -1,12 +1,12 @@
 const axios = require('axios');
 const crypto = require('crypto');
 
-async function fetchInvoice({ paymentAmountSats, apiSecret, apiKey }) {
+async function fetchInvoice ({ paymentAmountSats, apiSecret, apiKey }) {
   const { invoice } = await createBfxInvoice({ amountMsat: paymentAmountSats * 1000, apiKey, apiSecret });
   return invoice;
 }
 
-async function maybeAutoWithdraw({ apiKey, apiSecret, minWithdrawalSats, address }) {
+async function maybeAutoWithdraw ({ apiKey, apiSecret, minWithdrawalSats, address }) {
   const { lnxBalance, lnxAvailableBalance, btcBalance, btcAvailableBalance } = await getBitcoinWalletBalance({
     apiKey,
     apiSecret,
@@ -14,7 +14,7 @@ async function maybeAutoWithdraw({ apiKey, apiSecret, minWithdrawalSats, address
   console.log(`Bitfinex BTC balance ${btcBalance} and available balance ${btcAvailableBalance}`);
   console.log(`Bitfinex LNX balance ${lnxBalance} and available balance ${lnxAvailableBalance}`);
   if (btcAvailableBalance + lnxAvailableBalance > minWithdrawalSats) {
-    console.log(`Bitfinex account has enough BTC to withdraw`);
+    console.log('Bitfinex account has enough BTC to withdraw');
     if (lnxAvailableBalance > 0) {
       await transferLnxToBtc({ lnxAvailableBalance, apiKey, apiSecret });
       const sleepSecs = 30;
@@ -28,13 +28,13 @@ async function maybeAutoWithdraw({ apiKey, apiSecret, minWithdrawalSats, address
       apiSecret,
     });
   } else {
-    console.log(`Bitfinex account does not have enough BTC to withdraw`);
+    console.log('Bitfinex account does not have enough BTC to withdraw');
   }
 }
 
-function generateHeaders({ path, body, apiKey, apiSecret }) {
+function generateHeaders ({ path, body, apiKey, apiSecret }) {
   const nonce = (Date.now() * 1000).toString();
-  let payload = `/api/${path}${nonce}${JSON.stringify(body)}`;
+  const payload = `/api/${path}${nonce}${JSON.stringify(body)}`;
   const signature = crypto.createHmac('sha384', apiSecret).update(payload).digest('hex');
   return {
     'bfx-nonce': nonce,
@@ -44,9 +44,9 @@ function generateHeaders({ path, body, apiKey, apiSecret }) {
   };
 }
 
-async function createBfxInvoice({ amountMsat, apiKey, apiSecret }) {
+async function createBfxInvoice ({ amountMsat, apiKey, apiSecret }) {
   const path = 'v2/auth/w/deposit/invoice';
-  let postData = {
+  const postData = {
     wallet: 'exchange',
     currency: 'LNX',
     amount: ((amountMsat * 1.0) / 100000000000).toFixed(8), // Convert msats to BTC.
@@ -54,13 +54,13 @@ async function createBfxInvoice({ amountMsat, apiKey, apiSecret }) {
   const headers = generateHeaders({ path, body: postData, apiKey, apiSecret });
   const result = await axios.post(`https://api.bitfinex.com/${path}`, postData, { headers });
   console.log(result.data);
-  const [invoiceHash, invoice, placeholder1, placeholder2, amount] = result.data;
+  const [, invoice] = result.data;
   return { invoice };
 }
 
-async function getBitcoinWalletBalance({ apiKey, apiSecret }) {
+async function getBitcoinWalletBalance ({ apiKey, apiSecret }) {
   const path = 'v2/auth/r/wallets';
-  let postData = {};
+  const postData = {};
   const headers = generateHeaders({ path, body: postData, apiKey, apiSecret });
   const result = await axios.post(`https://api.bitfinex.com/${path}`, postData, { headers });
   console.log(result.data);
@@ -74,10 +74,10 @@ async function getBitcoinWalletBalance({ apiKey, apiSecret }) {
   };
 }
 
-async function transferLnxToBtc({ lnxAvailableBalance, apiKey, apiSecret }) {
+async function transferLnxToBtc ({ lnxAvailableBalance, apiKey, apiSecret }) {
   console.log(`Transferring ${lnxAvailableBalance} LNX to BTC`);
   const path = 'v2/auth/w/transfer';
-  let postData = {
+  const postData = {
     from: 'exchange',
     to: 'exchange',
     currency: 'LNX',
@@ -89,10 +89,10 @@ async function transferLnxToBtc({ lnxAvailableBalance, apiKey, apiSecret }) {
   console.log(result.data);
 }
 
-async function withdrawFunds({ amountBtc, toAddress, apiKey, apiSecret }) {
+async function withdrawFunds ({ amountBtc, toAddress, apiKey, apiSecret }) {
   console.log(`Withdrawing ${amountBtc} BTC to ${toAddress}`);
   const path = 'v2/auth/w/withdraw';
-  let postData = {
+  const postData = {
     wallet: 'exchange',
     method: 'bitcoin',
     amount: `${amountBtc}`,
@@ -104,6 +104,6 @@ async function withdrawFunds({ amountBtc, toAddress, apiKey, apiSecret }) {
   console.log(result.data);
 }
 
-const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 module.exports = { fetchInvoice, maybeAutoWithdraw };

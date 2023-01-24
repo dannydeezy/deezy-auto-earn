@@ -1,0 +1,38 @@
+{
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es2021": true
+  },
+  "extends": "standard",
+  "overrides": [],
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "rules": {
+    "semi": ["error", "always"],
+    "comma-dangle": ["error", "always-multiline"],
+    "camelcase": [
+      "error",
+      {
+        "allow": [
+          "pending_channels",
+          "tokens_per_vbyte",
+          "transaction_id",
+          "transaction_vout",
+          "outgoing_channels",
+          "max_fee",
+          "pathfinding_timeout",
+          "channel_point",
+          "local_tokens",
+          "partner_public_key",
+          "is_private",
+          "is_omitting_channels",
+          "public_key",
+          "currency_to",
+          "fee_deduct"
+        ]
+      }
+    ]
+  }
+}
