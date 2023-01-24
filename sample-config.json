@@ -1,30 +1,30 @@
 {
-    "CLOSE_WHEN_CHANNEL_EXCEEDS_RATIO": 0.95,
-    "DEEZY_CHANNEL_SIZE_SATS": 100000000,
-    "OPEN_CHANNEL_WHEN_LOCAL_SATS_BELOW": 100000,
-    "PRIVATE_CHANNEL": false,
-    "MAX_CHANNEL_OPEN_FEE_SATS_PER_VBYTE": 1,
-    "TLS_CERT_PATH": "path/to/if/not/default/tls.cert",
-    "MACAROON_PATH": "path/to/if/not/default/admin.macaroon",
-    "SOCKET": "your-lnd-socket-if-not-default:10009",
-    "TOR_PORT": 9050,
-    "TOR_HOST": "localhost",
-    "DESTINATIONS": [
-        {
-            "TYPE": "LNURL",
-            "LNURL_OR_ADDRESS": "timelyhail89@walletofsatoshi.com",
-            "MAX_ROUTE_FEE_PPM": 700,
-            "PAYMENT_AMOUNT_SATS": 50000
-        },
-        {
-            "TYPE": "BITFINEX",
-            "API_KEY": "API_KEY_123",
-            "API_SECRET": "API_SECRET_123",
-            "MAX_ROUTE_FEE_PPM": 600,
-            "PAYMENT_AMOUNT_SATS": 200000,
-            "AUTO_WITHDRAW": true,
-            "ON_CHAIN_WITHDRAWAL_TARGET_SIZE_SATS": 200000000,
-            "ON_CHAIN_WITHDRAWAL_ADDRESS": "on-chain-addr-on-your-lightning-node-that-is-on-your-bfx-allow-list"
-        }
-    ]
+  "CLOSE_WHEN_CHANNEL_EXCEEDS_RATIO": 0.95,
+  "DEEZY_CHANNEL_SIZE_SATS": 100000000,
+  "OPEN_CHANNEL_WHEN_LOCAL_SATS_BELOW": 100000,
+  "PRIVATE_CHANNEL": false,
+  "MAX_CHANNEL_OPEN_FEE_SATS_PER_VBYTE": 1,
+  "TLS_CERT_PATH": "path/to/if/not/default/tls.cert",
+  "MACAROON_PATH": "path/to/if/not/default/admin.macaroon",
+  "SOCKET": "your-lnd-socket-if-not-default:10009",
+  "TOR_PORT": 9050,
+  "TOR_HOST": "localhost",
+  "DESTINATIONS": [
+    {
+      "TYPE": "LNURL",
+      "LNURL_OR_ADDRESS": "timelyhail89@walletofsatoshi.com",
+      "MAX_ROUTE_FEE_PPM": 700,
+      "PAYMENT_AMOUNT_SATS": 50000
+    },
+    {
+      "TYPE": "BITFINEX",
+      "API_KEY": "API_KEY_123",
+      "API_SECRET": "API_SECRET_123",
+      "MAX_ROUTE_FEE_PPM": 600,
+      "PAYMENT_AMOUNT_SATS": 200000,
+      "AUTO_WITHDRAW": true,
+      "ON_CHAIN_WITHDRAWAL_TARGET_SIZE_SATS": 200000000,
+      "ON_CHAIN_WITHDRAWAL_ADDRESS": "on-chain-addr-on-your-lightning-node-that-is-on-your-bfx-allow-list"
+    }
+  ]
 }
