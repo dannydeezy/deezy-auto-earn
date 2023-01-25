@@ -43,3 +43,21 @@ to restart the service:
 ```
 sudo systemctl restart deezy-auto-earn
 ```
+## run with docker
+
+Setup config file with your custom values
+```
+cp sample-config.json config.json
+# edit config.json with your custom values
+```
+
+Build the container
+
+```
+docker build -t deezy-auto-earn-service .
+```
+
+Run the container
+```
+docker run -it -p 9615:9615 -v /lnd /config --rm --name deezy-auto-earn-service-1 deezy-auto-earn-service
+```
