@@ -13,6 +13,7 @@
     "axios": "^0.27.2",
     "ln-service": "^54.1.1",
     "lnurl-pay": "^1.0.1",
-    "tor-axios": "^1.0.11"
+    "tor-axios": "^1.0.11",
+    "winston": "^3.8.2"
   }
 }

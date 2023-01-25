@@ -1,4 +1,5 @@
 
+const { logger } = require('../utils/logger');
 const axios = require('axios')
 const crypto = require('crypto')
 
@@ -14,19 +15,19 @@ async function maybeAutoWithdraw({ apiKey, apiSecret, minWithdrawalSats, address
         btcBalance,
         btcAvailableBalance
     } = await getBitcoinWalletBalance({ apiKey, apiSecret })
-    console.log(`Bitfinex BTC balance ${btcBalance} and available balance ${btcAvailableBalance}`)
-    console.log(`Bitfinex LNX balance ${lnxBalance} and available balance ${lnxAvailableBalance}`)
+    logger.info(`Bitfinex BTC balance ${btcBalance} and available balance ${btcAvailableBalance}`)
+    logger.info(`Bitfinex LNX balance ${lnxBalance} and available balance ${lnxAvailableBalance}`)
     if (btcAvailableBalance + lnxAvailableBalance > minWithdrawalSats) {
-        console.log(`Bitfinex account has enough BTC to withdraw`)
+        logger.info(`Bitfinex account has enough BTC to withdraw`)
         if (lnxAvailableBalance > 0) {
             await transferLnxToBtc({ lnxAvailableBalance, apiKey, apiSecret })
             const sleepSecs = 30
-            console.log(`sleeping for ${sleepSecs} seconds while LNX is being converted to BTC`)
+            logger.info(`sleeping for ${sleepSecs} seconds while LNX is being converted to BTC`)
             await sleep(sleepSecs * 1000)
         }
         await withdrawFunds({ amountBtc: btcAvailableBalance + lnxAvailableBalance, toAddress: address, apiKey, apiSecret })
     } else {
-        console.log(`Bitfinex account does not have enough BTC to withdraw`)
+        logger.info(`Bitfinex account does not have enough BTC to withdraw`)
     }
 }
 
@@ -51,8 +52,8 @@ async function createBfxInvoice({ amountMsat, apiKey, apiSecret }) {
     };
     const headers = generateHeaders({ path, body: postData, apiKey, apiSecret })
     const result = await axios.post(`https://api.bitfinex.com/${path}`, postData, { headers });
-    console.log(result.data)
-    const [invoiceHash, invoice, placeholder1, placeholder2, amount] = result.data;
+
+    const [, invoice] = result.data;
     return { invoice };
 }
 
@@ -62,7 +63,7 @@ async function getBitcoinWalletBalance({ apiKey, apiSecret }) {
     let postData = {};
     const headers = generateHeaders({ path, body: postData, apiKey, apiSecret })
     const result = await axios.post(`https://api.bitfinex.com/${path}`, postData, { headers })
-    console.log(result.data)
+
     const lnxWalletBalances = result.data.find(it => it[0] === 'exchange' && it[1] === 'LNX')
     const btcWalletBalances = result.data.find(it => it[0] === 'exchange' && it[1] === 'BTC')
     return {
@@ -74,7 +75,7 @@ async function getBitcoinWalletBalance({ apiKey, apiSecret }) {
 }
 
 async function transferLnxToBtc({ lnxAvailableBalance, apiKey, apiSecret }) {
-    console.log(`Transferring ${lnxAvailableBalance} LNX to BTC`)
+    logger.info(`Transferring ${lnxAvailableBalance} LNX to BTC`)
     const path = 'v2/auth/w/transfer';
     let postData = {
         from: 'exchange',
@@ -84,12 +85,11 @@ async function transferLnxToBtc({ lnxAvailableBalance, apiKey, apiSecret }) {
         amount: `${lnxAvailableBalance}`,
     };
     const headers = generateHeaders({ path, body: postData, apiKey, apiSecret })
-    const result = await axios.post(`https://api.bitfinex.com/${path}`, postData, { headers })
-    console.log(result.data)
+    await axios.post(`https://api.bitfinex.com/${path}`, postData, { headers })
 }
 
 async function withdrawFunds({ amountBtc, toAddress, apiKey, apiSecret }) {
-    console.log(`Withdrawing ${amountBtc} BTC to ${toAddress}`)
+    logger.info(`Withdrawing ${amountBtc} BTC to ${toAddress}`)
     const path = 'v2/auth/w/withdraw';
     let postData = {
         wallet: 'exchange',
@@ -99,8 +99,7 @@ async function withdrawFunds({ amountBtc, toAddress, apiKey, apiSecret }) {
         fee_deduct: 1
     };
     const headers = generateHeaders({ path, body: postData, apiKey, apiSecret })
-    const result = await axios.post(`https://api.bitfinex.com/${path}`, postData, { headers })
-    console.log(result.data)
+    await axios.post(`https://api.bitfinex.com/${path}`, postData, { headers })
 }
 
 const sleep = ms => new Promise(res => setTimeout(res, ms));

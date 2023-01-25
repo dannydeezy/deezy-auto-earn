@@ -1,4 +1,5 @@
 const { getChannels, pay, signMessage, getChainBalance, getPendingChannels, openChannel, getNode, addPeer, getPeers, getChainFeeRate } = require('ln-service')
+const { logger } = require('../utils/logger');
 const lnurlClient = require('./clients/lnurl')
 const bitfinexClient = require('./clients/bitfinex')
 
@@ -11,11 +12,11 @@ const CHAIN_BALANCE_BUFFER = 50000
 
 async function tryPayInvoice({ invoice, paymentAmountSats, maxRouteFeePpm, outChannelIds }) {
     const maxRouteFeeSats = Math.floor(maxRouteFeePpm * paymentAmountSats / 1000000)
-    console.log(`Using max route fee sats ${maxRouteFeeSats}`)
+    logger.info(`Using max route fee sats ${maxRouteFeeSats}`)
 
     // Sometimes LND hangs too long when trying to pay, and we need to kill the process.
     function abortMission() {
-        console.error("Payment timeout exceeded without terminating. Exiting!")
+        logger.error("Payment timeout exceeded without terminating. Exiting!")
         process.exit(1)
     }
 
@@ -29,8 +30,7 @@ async function tryPayInvoice({ invoice, paymentAmountSats, maxRouteFeePpm, outCh
             pathfinding_timeout: PATHFINDING_TIMEOUT_MS,
         }
     ).catch(err => {
-        console.error(err)
-        console.log(`Failed to pay invoice ${invoice}`)
+        logger.error(`Failed to pay invoice ${invoice}`, err)
         return null
     })
     clearTimeout(paymentTimeout)
@@ -38,7 +38,7 @@ async function tryPayInvoice({ invoice, paymentAmountSats, maxRouteFeePpm, outCh
     if (!paymentResult || !paymentResult.confirmed_at) return
 
     const feePpm = Math.round(paymentResult.safe_fee * 1000000 / paymentAmountSats)
-    console.log(`Payment confirmed, with fee ${paymentResult.safe_fee} satoshis, and ppm ${feePpm}`)
+    logger.info(`Payment confirmed, with fee ${paymentResult.safe_fee} satoshis, and ppm ${feePpm}`)
 }
 
 async function attemptPaymentToDestination({ destination, outChannelIds }) {
@@ -52,18 +52,18 @@ async function attemptPaymentToDestination({ destination, outChannelIds }) {
             })
             break;
         case 'BITFINEX':
-            invoice = await bitfinexClient.fetchInvoice({ 
+            invoice = await bitfinexClient.fetchInvoice({
                 paymentAmountSats,
                 apiSecret: destination.API_SECRET,
-                apiKey: destination.API_KEY 
+                apiKey: destination.API_KEY
             })
             break;
         default:
-            console.error(`Unknown type ${destination.type}`)
+            logger.error(`Unknown type ${destination.type}`)
             return
     }
     if (!invoice) {
-        console.log('no invoice returned')
+        logger.debug('no invoice returned')
         return
     }
 
@@ -73,7 +73,7 @@ async function attemptPaymentToDestination({ destination, outChannelIds }) {
         maxRouteFeePpm: destination.MAX_ROUTE_FEE_PPM,
         outChannelIds
     }).catch(err => {
-        console.error(err)
+        logger.error('Failed to try pay invoice', err);
     })
 }
 
@@ -83,10 +83,10 @@ function isReadyToEarnAndClose({ channel }) {
 
 async function earnAndClose({ channel }) {
     const channelPoint = `${channel.transaction_id}:${channel.transaction_vout}`
-    console.log(`Requesting earn and close for deezy channel: ${channelPoint}`)
+    logger.info(`Requesting earn and close for deezy channel: ${channelPoint}`)
     const message = `close ${channelPoint}`
     const { signature } = await signMessage({ lnd, message }).catch(err => {
-        console.error(err)
+        logger.error('Failed to sign message', err)
         return {}
     })
     if (!signature) return
@@ -94,11 +94,10 @@ async function earnAndClose({ channel }) {
         channel_point: channelPoint,
         signature
     }
-    const response = await axios.post(`https://api.deezy.io/v1/earn/closechannel`, body).catch(err => {
-        console.error(err)
+    await axios.post(`https://api.deezy.io/v1/earn/closechannel`, body).catch(err => {
+        logger.error('Failed to request earn and close', err)
         return {}
     })
-    console.log(response.data)
 }
 
 async function maybeOpenChannel({ localInitiatedDeezyChannels }) {
@@ -107,23 +106,23 @@ async function maybeOpenChannel({ localInitiatedDeezyChannels }) {
     const pendingOpenLocalSats = pending_channels.reduce((acc, it) => acc + it.local_balance, 0)
 
     const totalLocalSats = currentLocalSats + pendingOpenLocalSats
-    console.log(`Total local open or pending sats: ${totalLocalSats}`)
+    logger.info(`Total local open or pending sats: ${totalLocalSats}`)
     if (totalLocalSats > (config.OPEN_CHANNEL_WHEN_LOCAL_SATS_BELOW || 0)) {
-        console.log(`Not opening channel, total local sats ${totalLocalSats} is above threshold ${config.OPEN_CHANNEL_WHEN_LOCAL_SATS_BELOW}`)
+        logger.info(`Not opening channel, total local sats ${totalLocalSats} is above threshold ${config.OPEN_CHANNEL_WHEN_LOCAL_SATS_BELOW}`)
         return
     }
 
     const chainBalance = (await getChainBalance({ lnd })).chain_balance
-    console.log(`Chain balance is ${chainBalance}`)
+    logger.info(`Chain balance is ${chainBalance}`)
 
     if (chainBalance < config.DEEZY_CHANNEL_SIZE_SATS + CHAIN_BALANCE_BUFFER) {
-        console.log(`Not opening channel, chain balance ${chainBalance} is below threshold ${config.DEEZY_CHANNEL_SIZE_SATS} plus buffer ${CHAIN_BALANCE_BUFFER}`)
+        logger.info(`Not opening channel, chain balance ${chainBalance} is below threshold ${config.DEEZY_CHANNEL_SIZE_SATS} plus buffer ${CHAIN_BALANCE_BUFFER}`)
         return
     }
 
-    console.log(`Opening channel with ${DEEZY_PUBKEY} for ${config.DEEZY_CHANNEL_SIZE_SATS} sats`)
+    logger.info(`Opening channel with ${DEEZY_PUBKEY} for ${config.DEEZY_CHANNEL_SIZE_SATS} sats`)
     const { tokens_per_vbyte } = await getChainFeeRate({ lnd }).catch(err => {
-        console.error(err)
+        logger.error('Failed to get chain fee rate', err)
         return {}
     })
     if (!tokens_per_vbyte) return
@@ -136,11 +135,11 @@ async function maybeOpenChannel({ localInitiatedDeezyChannels }) {
         chain_fee_tokens_per_vbyte: channelOpenFeeRate,
         is_private: config.PRIVATE_CHANNEL,
     }).catch(err => {
-        console.error(err)
+        logger.error('Failed to open channel', err)
         return {}
     })
     if (!transaction_id || !transaction_vout) return false
-    console.log(`Initiated channel with deezy, txid ${transaction_id}, vout ${transaction_vout}`)
+    logger.info(`Initiated channel with deezy, txid ${transaction_id}, vout ${transaction_vout}`)
     return true
 }
 
@@ -148,24 +147,24 @@ async function ensureConnectedToDeezy() {
     const { peers } = await getPeers({ lnd })
     const deezyPeer = peers.find(it => it.public_key === DEEZY_PUBKEY)
     if (deezyPeer) {
-        console.log(`Already connected to deezy`)
+        logger.info(`Already connected to deezy`)
         return
     }
-    console.log(`Connecting to deezy`)
+    logger.info(`Connecting to deezy`)
     const deezyNodeInfo = await getNode({ lnd, is_omitting_channels: true, public_key: DEEZY_PUBKEY })
     await addPeer({ lnd, public_key: DEEZY_PUBKEY, socket: deezyNodeInfo.sockets[0].socket }).catch(err => {
-        console.error(err)
+        logger.error('Failed to add peer', err)
     })
 }
 
 async function maybeAutoWithdraw({ destination }) {
     if (destination.type !== 'BITFINEX') {
-        console.log(`AUTO_WITHDRAW is currently only enabled for BITFINEX destinations`)
+        logger.info(`AUTO_WITHDRAW is currently only enabled for BITFINEX destinations`)
         return
     }
-    await bitfinexClient.maybeAutoWithdraw({ 
-        apiKey, 
-        apiSecret, 
+    await bitfinexClient.maybeAutoWithdraw({
+        apiKey,
+        apiSecret,
         address: destination.ON_CHAIN_WITHDRAWAL_ADDRESS,
         minWithdrawalSats: destination.ON_CHAIN_WITHDRAWAL_TARGET_SIZE_SATS
     })
@@ -173,44 +172,44 @@ async function maybeAutoWithdraw({ destination }) {
 
 async function run() {
     await ensureConnectedToDeezy()
-    console.log(`Fetching channel info`)
+    logger.info(`Fetching channel info`)
     const { channels } = await getChannels({
         lnd,
         partner_public_key: DEEZY_PUBKEY
     }).catch(err => {
-        console.error(err)
+        logger.error('Failed to get channels', err)
         return {}
     })
     if (!channels) return
     const localInitiatedDeezyChannels = channels.filter(it => !it.is_partner_initiated)
-    console.log(`Found ${localInitiatedDeezyChannels.length} locally initiated channel(s) with deezy`)
+    logger.info(`Found ${localInitiatedDeezyChannels.length} locally initiated channel(s) with deezy`)
 
-    console.log(`Checking if any deezy channels are ready to close`)
+    logger.info(`Checking if any deezy channels are ready to close`)
     for (const channel of localInitiatedDeezyChannels) {
         if (isReadyToEarnAndClose({ channel })) {
             await earnAndClose({ channel })
             // Terminate here if we are closing a channel.
-            console.log(`Attempted to earn and close channel, terminating here.`)
+            logger.info(`Attempted to earn and close channel, terminating here.`)
             return
         }
     }
 
-    console.log(`Checking if we should open a channel to deezy`)
+    logger.info(`Checking if we should open a channel to deezy`)
     await maybeOpenChannel({ localInitiatedDeezyChannels })
 
     const outChannelIds = localInitiatedDeezyChannels.map(it => it.id)
     if (outChannelIds.length === 0) {
-        console.log(`No locally initiated channels to deezy currently open, terminating here`)
+        logger.info(`No locally initiated channels to deezy currently open, terminating here`)
         return
     }
 
     for (const destination of config.DESTINATIONS) {
         await attemptPaymentToDestination({ destination, outChannelIds }).catch(err => {
-            console.error(err)
+            logger.error('Error attempting payment to destination', err)
         })
         if (destination.AUTO_WITHDRAW) {
             await maybeAutoWithdraw({ destination }).catch(err => {
-                console.error(err)
+                logger.error('Error attempting auto withdraw', err)
             })
         }
     }
