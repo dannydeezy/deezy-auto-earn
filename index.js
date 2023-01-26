@@ -52,10 +52,10 @@ async function attemptPaymentToDestination({ destination, outChannelIds }) {
             })
             break;
         case 'BITFINEX':
-            invoice = await bitfinexClient.fetchInvoice({ 
+            invoice = await bitfinexClient.fetchInvoice({
                 paymentAmountSats,
                 apiSecret: destination.API_SECRET,
-                apiKey: destination.API_KEY 
+                apiKey: destination.API_KEY
             })
             break;
         default:
@@ -163,9 +163,9 @@ async function maybeAutoWithdraw({ destination }) {
         console.log(`AUTO_WITHDRAW is currently only enabled for BITFINEX destinations`)
         return
     }
-    await bitfinexClient.maybeAutoWithdraw({ 
-        apiKey, 
-        apiSecret, 
+    await bitfinexClient.maybeAutoWithdraw({
+        apiKey: destination.API_KEY,
+        apiSecret: destination.API_SECRET,
         address: destination.ON_CHAIN_WITHDRAWAL_ADDRESS,
         minWithdrawalSats: destination.ON_CHAIN_WITHDRAWAL_TARGET_SIZE_SATS
     })
