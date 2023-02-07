@@ -43,7 +43,10 @@ async function tryPayInvoice({ invoice, paymentAmountSats, maxRouteFeePpm, outCh
 
 async function attemptPaymentToDestination({ destination, outChannelIds }) {
     let invoice
-    const paymentAmountSats = destination.PAYMENT_AMOUNT_SATS
+    var paymentAmountSats = destination.PAYMENT_AMOUNT_SATS > 0 ? destination.PAYMENT_AMOUNT_SATS : destination.MAX_PAYMENT_AMOUNT_SATS
+    if (attempt > 0) {
+        paymentAmountSats *= Math.pow ( ( 1 / destination.PAYMENT_MULTIPLIER ), attempt )
+    }
     switch (destination.TYPE) {
         case 'LNURL':
             invoice = await lnurlClient.fetchInvoice({
@@ -74,6 +77,12 @@ async function attemptPaymentToDestination({ destination, outChannelIds }) {
         outChannelIds
     }).catch(err => {
         console.error(err)
+        if (destination.PAYMENT_AMOUNT_SATS < 1) {
+            if ((paymentAmountSats / destination.PAYMENT_MULTIPLIER) > destination.MIN_PAYMENT_AMOUNT_SATS){
+                attempt++
+                attemptPaymentToDestination({ destination, outChannelIds, attempt})
+            }
+        }
     })
 }
 
@@ -205,7 +214,8 @@ async function run() {
     }
 
     for (const destination of config.DESTINATIONS) {
-        await attemptPaymentToDestination({ destination, outChannelIds }).catch(err => {
+        const first_run = 0
+        await attemptPaymentToDestination({ destination, outChannelIds, first_run}).catch(err => {
             console.error(err)
         })
         if (destination.AUTO_WITHDRAW) {

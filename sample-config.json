@@ -14,7 +14,10 @@
             "TYPE": "LNURL",
             "LNURL_OR_ADDRESS": "timelyhail89@walletofsatoshi.com",
             "MAX_ROUTE_FEE_PPM": 700,
-            "PAYMENT_AMOUNT_SATS": 50000
+            "PAYMENT_AMOUNT_SATS": 50000,
+            "MIN_PAYMENT_AMOUNT_SATS": 25000,
+            "MAX_PAYMENT_AMOUNT_SATS": 250000,
+            "PAYMENT_MULTIPLIER":2
         },
         {
             "TYPE": "BITFINEX",
