@@ -1,7 +1,7 @@
 # deezy-auto-earn
-automatically open channels to deezy, push sats through, and earn
+Automatically opens a channel to deezy, push sats through, and earn.
 
-This is my first fork. Made some changes to the Config.json and the async function maybeOpenChannel. This creates the feature request i submitted here https://github.com/dannydeezy/deezy-auto-earn/issues/12#issue-1557514653. 
+This is my first fork. I made some changes to the config.json and the index.js. The changes reflect the feature request I submitted here https://github.com/dannydeezy/deezy-auto-earn/issues/12#issue-1557514653. 
 
 ## setup
 ```
