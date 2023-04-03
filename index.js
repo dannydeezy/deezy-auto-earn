@@ -108,20 +108,24 @@ async function maybeOpenChannel({ localInitiatedDeezyChannels }) {
 
     const totalLocalSats = currentLocalSats + pendingOpenLocalSats
     console.log(`Total local open or pending sats: ${totalLocalSats}`)
-    if (totalLocalSats > (config.OPEN_CHANNEL_WHEN_LOCAL_SATS_BELOW || 0)) {
-        console.log(`Not opening channel, total local sats ${totalLocalSats} is above threshold ${config.OPEN_CHANNEL_WHEN_LOCAL_SATS_BELOW}`)
-        return
-    }
+
+    const maxChannelSize = config.MAX_CHANNEL_SIZE_SATS || Infinity
+    const minChannelSize = config.MIN_CHANNEL_SIZE_SATS || 0
+    const reserveOnChain = config.RESERVE_ON_CHAIN_SATS || 0
 
     const chainBalance = (await getChainBalance({ lnd })).chain_balance
     console.log(`Chain balance is ${chainBalance}`)
 
-    if (chainBalance < config.DEEZY_CHANNEL_SIZE_SATS + CHAIN_BALANCE_BUFFER) {
-        console.log(`Not opening channel, chain balance ${chainBalance} is below threshold ${config.DEEZY_CHANNEL_SIZE_SATS} plus buffer ${CHAIN_BALANCE_BUFFER}`)
+    const availableBalance = chainBalance - reserveOnChain
+
+    if (availableBalance < minChannelSize) {
+        console.log(`Not opening channel, available balance ${availableBalance} is below minimum channel size ${minChannelSize}`)
         return
     }
 
-    console.log(`Opening channel with ${DEEZY_PUBKEY} for ${config.DEEZY_CHANNEL_SIZE_SATS} sats`)
+    const channelSize = Math.min(maxChannelSize, availableBalance)
+    console.log(`Opening channel with ${DEEZY_PUBKEY} for ${channelSize} sats`)
+
     const { tokens_per_vbyte } = await getChainFeeRate({ lnd }).catch(err => {
         console.error(err)
         return {}
@@ -131,7 +135,7 @@ async function maybeOpenChannel({ localInitiatedDeezyChannels }) {
     const channelOpenFeeRate = config.MAX_CHANNEL_OPEN_FEE_SATS_PER_VBYTE ? Math.min(tokens_per_vbyte, config.MAX_CHANNEL_OPEN_FEE_SATS_PER_VBYTE) : tokens_per_vbyte
     const { transaction_id, transaction_vout } = await openChannel({
         lnd,
-        local_tokens: config.DEEZY_CHANNEL_SIZE_SATS,
+        local_tokens: channelSize,
         partner_public_key: DEEZY_PUBKEY,
         chain_fee_tokens_per_vbyte: channelOpenFeeRate,
         is_private: config.PRIVATE_CHANNEL,
