@@ -1,6 +1,8 @@
 const { getChannels, pay, signMessage, getChainBalance, getPendingChannels, openChannel, getNode, addPeer, getPeers, getChainFeeRate } = require('ln-service')
 const lnurlClient = require('./clients/lnurl')
 const bitfinexClient = require('./clients/bitfinex')
+const nicehashClient = require('./clients/nicehash')
+
 
 const axios = require('axios')
 const config = require('./config.json')
@@ -58,6 +60,13 @@ async function attemptPaymentToDestination({ destination, outChannelIds }) {
                 apiKey: destination.API_KEY
             })
             break;
+        case 'NICEHASH':
+            invoice = await nicehashClient.fetchInvoice({
+                paymentAmountSats,
+                apiSecret: destination.API_SECRET,
+                apiKey: destination.API_KEY
+    })
+    break;
         default:
             console.error(`Unknown type ${destination.type}`)
             return
@@ -175,6 +184,19 @@ async function maybeAutoWithdraw({ destination }) {
     })
 }
 
+async function maybeAutoWithdraw({ destination }) {
+    if (destination.type !== 'NICEHASH') {
+        console.log(`AUTO_WITHDRAW is currently only enabled for NICEHASH destinations`)
+        return
+    }
+    await nicehashClient.maybeAutoWithdraw({
+        apiKey: destination.API_KEY,
+        apiSecret: destination.API_SECRET,
+        address: destination.ON_CHAIN_WITHDRAWAL_ADDRESS,
+        minWithdrawalSats: destination.ON_CHAIN_WITHDRAWAL_TARGET_SIZE_SATS
+    })
+}
+
 async function run() {
     await ensureConnectedToDeezy()
     console.log(`Fetching channel info`)
@@ -189,6 +211,11 @@ async function run() {
     const localInitiatedDeezyChannels = channels.filter(it => !it.is_partner_initiated)
     console.log(`Found ${localInitiatedDeezyChannels.length} locally initiated channel(s) with deezy`)
 
+//alows me to open a channel to deezy even with one pending close
+console.log(`Checking if we should open a another channel to deezy when one channel is pending close`)
+await maybeOpenChannel({ localInitiatedDeezyChannels })
+//end of checking opeing
+
     console.log(`Checking if any deezy channels are ready to close`)
     for (const channel of localInitiatedDeezyChannels) {
         if (isReadyToEarnAndClose({ channel })) {
@@ -198,9 +225,9 @@ async function run() {
             return
         }
     }
-
-    console.log(`Checking if we should open a channel to deezy`)
-    await maybeOpenChannel({ localInitiatedDeezyChannels })
+//this will check if it should open
+    // console.log(`Checking if we should open a channel to deezy`)
+    // await maybeOpenChannel({ localInitiatedDeezyChannels })
 
     const outChannelIds = localInitiatedDeezyChannels.map(it => it.id)
     if (outChannelIds.length === 0) {
