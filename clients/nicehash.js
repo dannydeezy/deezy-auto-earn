@@ -59,7 +59,7 @@ async function getBitcoinWalletBalance({ apiKey, apiSecret, orgId }) {
     const path = 'main/api/v2/accounting/account2/BTC';
     // let postData = {};
     // const headers = generateHeaders({ path, body: postData, apiKey, apiSecret, orgId })
-    const headers = generateHeaders({ path, apiKey, apiSecret, orgId });
+    const headers = generateHeaders({ path, body: postData, apiKey, apiSecret, orgId })
     const result = await axios.get(`https://api2.nicehash.com/${path}`, { headers });
     // const result = await axios.post(`https://api2.nicehash.com/${path}`, postData, { headers })
 
@@ -82,8 +82,6 @@ async function withdrawFunds({ amountBtc, toAddress, apiKey, apiSecret, orgId })
         address: toAddress,
     };
     const headers = generateHeaders({ path, body: postData, apiKey, apiSecret, orgId })
-   //this was meant if JSON.stringify isnt in header // const headers = generateHeaders({ path, body: JSON.stringify(postData), apiKey, apiSecret, orgId })
-
     const result = await axios.post(`https://api2.nicehash.com/${path}`, postData, { headers })
     console.log(result.data)
 }

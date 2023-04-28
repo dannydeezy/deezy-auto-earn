@@ -28,10 +28,10 @@
             "ON_CHAIN_WITHDRAWAL_ADDRESS": "on-chain-addr-on-your-lightning-node-that-is-on-your-bfx-allow-list"
         },
         {
-            "TYPE": "Nichash",
+            "TYPE": "NICEHASH",
             "API_KEY": "API_KEY_123",
             "API_SECRET": "API_SECRET_123",
-            "ORG_ID": "",
+            "ORG_ID": "Organization-ID",
             "MAX_ROUTE_FEE_PPM": 600,
             "PAYMENT_AMOUNT_SATS": 200000,
             "AUTO_WITHDRAW": true,
