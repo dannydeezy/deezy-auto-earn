@@ -64,7 +64,8 @@ async function attemptPaymentToDestination({ destination, outChannelIds }) {
             invoice = await nicehashClient.fetchInvoice({
                 paymentAmountSats,
                 apiSecret: destination.API_SECRET,
-                apiKey: destination.API_KEY
+                apiKey: destination.API_KEY,
+                orgid: destination.ORG_ID
     })
     break;
         default:
@@ -192,6 +193,7 @@ async function maybeAutoWithdraw({ destination }) {
     await nicehashClient.maybeAutoWithdraw({
         apiKey: destination.API_KEY,
         apiSecret: destination.API_SECRET,
+        orgId: destination.ORG_ID,
         address: destination.ON_CHAIN_WITHDRAWAL_ADDRESS,
         minWithdrawalSats: destination.ON_CHAIN_WITHDRAWAL_TARGET_SIZE_SATS
     })
