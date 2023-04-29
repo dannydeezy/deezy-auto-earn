@@ -190,6 +190,9 @@ async function maybeAutoWithdraw({ destination }) {
         console.log(`AUTO_WITHDRAW is currently only enabled for NICEHASH destinations`)
         return
     }
+
+    console.log(destination);
+
     await nicehashClient.maybeAutoWithdraw({
         apiKey: destination.API_KEY,
         apiSecret: destination.API_SECRET,

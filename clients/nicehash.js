@@ -29,6 +29,9 @@ function generateHeaders({ path, body, apiKey, apiSecret, orgId }) {
     let payload = `/api/${path}${nonce}${JSON.stringify(body)}`;
     // const signature = crypto.createHmac('sha384', apiSecret).update(payload).digest('hex');
     const signature = crypto.createHmac('sha256', apiSecret).update(payload).digest('hex');
+
+    console.log("orgId:", orgId);
+
     return {
         // 'X-nonce': nonce,
         'X-Auth': signature,
