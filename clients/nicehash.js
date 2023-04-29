@@ -1,6 +1,7 @@
 
 const axios = require('axios')
 const crypto = require('crypto')
+const { v4: uuidv4 } = require('uuid');
 
 async function fetchInvoice({ paymentAmountSats, apiSecret, apiKey, orgId }) {
     const { invoice } = await createNicehashInvoice({ amountMsat: paymentAmountSats * 1000, apiKey, apiSecret, orgId })
@@ -24,19 +25,22 @@ async function maybeAutoWithdraw({ apiKey, apiSecret, minWithdrawalSats, address
 //completed header
 function generateHeaders({ path, body, apiKey, apiSecret, orgId }) {
     const nonce = (Date.now() * 1000).toString();
-    // const currentTime = Date.now().toString();
+   // const currentTime = Date.now().toString();
     let payload = `/${path}${nonce}${JSON.stringify(body)}`;
+    const requestId = uuidv4();
     // let payload = `/api/${path}${nonce}${JSON.stringify(body)}`;
     const signature = crypto.createHmac('sha256', apiSecret).update(payload).digest('hex');
 
     console.log("orgId:", orgId);
+    console.log(requestId);
 
     return {
         'X-nonce': nonce,
         'X-Auth': signature,
         'X-Api-Key': apiKey,
         'X-Organization-Id': orgId,
-        // 'X-Time': currentTime,
+        'X-Request-Id': requestId,
+        //'X-Time': currentTime,
         'content-type': 'application/json'
     };
 }
