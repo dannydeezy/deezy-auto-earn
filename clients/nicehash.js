@@ -25,15 +25,14 @@ async function maybeAutoWithdraw({ apiKey, apiSecret, minWithdrawalSats, address
 function generateHeaders({ path, body, apiKey, apiSecret, orgId }) {
     const nonce = (Date.now() * 1000).toString();
     // const currentTime = Date.now().toString();
-    // let payload = `/${path}${nonce}`;
-    let payload = `/api/${path}${nonce}${JSON.stringify(body)}`;
-    // const signature = crypto.createHmac('sha384', apiSecret).update(payload).digest('hex');
+    let payload = `/${path}${nonce}${JSON.stringify(body)}`;
+    // let payload = `/api/${path}${nonce}${JSON.stringify(body)}`;
     const signature = crypto.createHmac('sha256', apiSecret).update(payload).digest('hex');
 
     console.log("orgId:", orgId);
 
     return {
-        // 'X-nonce': nonce,
+        'X-nonce': nonce,
         'X-Auth': signature,
         'X-Api-Key': apiKey,
         'X-Organization-Id': orgId,
