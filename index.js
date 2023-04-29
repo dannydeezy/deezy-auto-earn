@@ -65,7 +65,7 @@ async function attemptPaymentToDestination({ destination, outChannelIds }) {
                 paymentAmountSats,
                 apiSecret: destination.API_SECRET,
                 apiKey: destination.API_KEY,
-                orgid: destination.ORG_ID
+                orgId: destination.ORG_ID
     })
     break;
         default:
@@ -186,6 +186,7 @@ async function maybeAutoWithdraw({ destination }) {
 }
 
 async function maybeAutoWithdraw({ destination }) {
+    console.log(destination);
     if (destination.type !== 'NICEHASH') {
         console.log(`AUTO_WITHDRAW is currently only enabled for NICEHASH destinations`)
         return

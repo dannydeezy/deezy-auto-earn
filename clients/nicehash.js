@@ -60,8 +60,7 @@ async function createNicehashInvoice({ amountMsat, apiKey, apiSecret, orgId }) {
 //completed getBitcoinWalletBalance
 async function getBitcoinWalletBalance({ apiKey, apiSecret, orgId }) {
     const path = 'main/api/v2/accounting/account2/BTC';
-    // let postData = {};
-    // const headers = generateHeaders({ path, body: postData, apiKey, apiSecret, orgId })
+    let postData = {};
     const headers = generateHeaders({ path, body: postData, apiKey, apiSecret, orgId })
     const result = await axios.get(`https://api2.nicehash.com/${path}`, { headers });
     // const result = await axios.post(`https://api2.nicehash.com/${path}`, postData, { headers })
