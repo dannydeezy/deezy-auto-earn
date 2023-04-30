@@ -24,8 +24,9 @@ async function maybeAutoWithdraw({ apiKey, apiSecret, minWithdrawalSats, address
 
 //completed header
 function generateHeaders({ path, body, apiKey, apiSecret, orgId }) {
-   // const currentTime = Date.now().toString();
-    const timestamp = Date.now() / 1000;
+    const nonce = crypto.randomBytes(16).toString('hex');
+    const timestamp = Date.now()
+    //const nonce = Date.now().toString();
     let payload = `/${path}${nonce}${JSON.stringify(body)}`;
     const requestId = uuidv4();
     // let payload = `/api/${path}${nonce}${JSON.stringify(body)}`;
@@ -41,7 +42,6 @@ function generateHeaders({ path, body, apiKey, apiSecret, orgId }) {
         'X-Organization-Id': orgId,
         'X-Request-Id': requestId,
         'X-Time': timestamp,
-        //'X-Time': currentTime,
         'content-type': 'application/json'
     };
 }
