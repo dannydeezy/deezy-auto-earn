@@ -24,8 +24,8 @@ async function maybeAutoWithdraw({ apiKey, apiSecret, minWithdrawalSats, address
 
 //completed header
 function generateHeaders({ path, body, apiKey, apiSecret, orgId }) {
-    const nonce = (Date.now() * 1000).toString();
    // const currentTime = Date.now().toString();
+    const timestamp = Date.now() / 1000;
     let payload = `/${path}${nonce}${JSON.stringify(body)}`;
     const requestId = uuidv4();
     // let payload = `/api/${path}${nonce}${JSON.stringify(body)}`;
@@ -36,10 +36,11 @@ function generateHeaders({ path, body, apiKey, apiSecret, orgId }) {
 
     return {
         'X-nonce': nonce,
-        'X-Auth': signature,
+        'X-Auth': apiKey + ':' + signature,
         'X-Api-Key': apiKey,
         'X-Organization-Id': orgId,
         'X-Request-Id': requestId,
+        'X-Time': timestamp,
         //'X-Time': currentTime,
         'content-type': 'application/json'
     };
